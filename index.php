@@ -4,39 +4,6 @@ ini_set('display_errors', 0);
 session_start();
 
 $BASE_API_URL = "https://blanchedalmond-dugong-106131.hostingersite.com/channels.php";
-$CONFIG_FILE = __DIR__ . "/pinned_channel.txt";
-
-// معالجة تسجيل الدخول للأدمن
-if (isset($_POST['admin_pass']) && $_POST['admin_pass'] == '9999') {
-    $_SESSION['is_admin'] = true;
-}
-// تسجيل الخروج
-if (isset($_GET['logout'])) {
-    unset($_SESSION['is_admin']);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// حفظ القناة المثبتة برابطها واسمها ولوجوها الجديد للجميع
-if (isset($_POST['save_pinned']) && isset($_SESSION['is_admin'])) {
-    $pinned_data = [
-        'stream_url' => $_POST['pinned_url'],
-        'name' => $_POST['pinned_name'],
-        'image' => $_POST['pinned_img']
-    ];
-    @file_put_contents($CONFIG_FILE, json_encode($pinned_data, JSON_UNESCAPED_UNICODE));
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// قراءة بيانات القناة المثبتة لتعرض لجميع الزوار
-$pinned_channel = null;
-if (file_exists($CONFIG_FILE)) {
-    $content = @file_get_contents($CONFIG_FILE);
-    if ($content) {
-        $pinned_channel = json_decode($content, true);
-    }
-}
 
 if (isset($_GET['action']) && $_GET['action'] == 'stream') {
     $url = null;
@@ -156,15 +123,8 @@ $items = $api_data['items'] ?? [];
             display: flex; justify-content: space-between; align-items: center; width: 100%;
         }
         .main-header .back-btn { color: var(--text-light); text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .main-header .logo { font-family: 'Cairo'; font-size: 24px; font-weight: 900; color: #dc2626; user-select: none; }
+        .main-header .logo { font-family: 'Cairo'; font-size: 24px; font-weight: 900; color: #dc2626; }
         
-        /* جعل حرف الـ m كزر مخفي مدمج تماماً */
-        .secret-trigger {
-            cursor: pointer;
-            color: #dc2626;
-            display: inline-block;
-        }
-
         .nav-buttons {  
             display: flex;  
             gap: 12px;  
@@ -218,13 +178,6 @@ $items = $api_data['items'] ?? [];
         .grid-three-columns .item-card img { width: 100%; aspect-ratio: 1/1; max-width: 65px; object-fit: contain; border-radius: 6px; margin-bottom: 8px; }
         .grid-three-columns .item-card .title { font-size: 12px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* ستايل زر التثبيت الخاص بالأدمن على الكروت */
-        .admin-pin-badge {
-            background: #dc2626; color: #fff; font-size: 10px; font-weight: bold; padding: 3px 8px;
-            border-radius: 4px; margin-top: 5px; border: 1px solid #fff; z-index: 5;
-        }
-        .admin-pin-badge:hover { background: #fff; color: #000; }
-
         .player-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box;
@@ -258,10 +211,7 @@ $items = $api_data['items'] ?? [];
         <?php else: ?>
             <div style="width: 50px;"></div>
         <?php endif; ?>
-        
-        <!-- الزر السري مدمج تماماً في حرف الـ m من كلمة mousa -->
-        <div class="logo">𝕒𝕓𝕕ο <span class="secret-trigger" onclick="triggerAdmin()">𝕞</span>𝕠𝕦𝕤𝕒</div>
-        
+        <div class="logo">𝕒𝕓𝕕ο 𝕞𝕠𝕦𝕤𝕒</div>
         <div style="width: 50px;"></div>
     </div>
     
@@ -269,41 +219,6 @@ $items = $api_data['items'] ?? [];
         <a href="http://ab.gt.tc" target="_blank" class="nav-btn"><i class="fas fa-film"></i> الأفلام</a>
         <a href="http://eng.gt.tc" target="_blank" class="nav-btn"><i class="fas fa-video"></i> المسلسلات</a>
     </div>
-</div>
-
-<div class="container" style="margin-top: 10px; padding-bottom: 0;">
-    <!-- فورم مخفي تماماً لإرسال كلمة المرور واستقبال طلبات الحفظ -->
-    <form id="adminAuthForm" method="POST" style="display:none;">
-        <input type="hidden" name="admin_pass" id="adminPassInput">
-    </form>
-    <form id="pinChannelForm" method="POST" style="display:none;">
-        <input type="hidden" name="save_pinned" value="1">
-        <input type="hidden" name="pinned_name" id="form_p_name">
-        <input type="hidden" name="pinned_img" id="form_p_img">
-        <input type="hidden" name="pinned_url" id="form_p_url">
-    </form>
-
-    <?php if (isset($_SESSION['is_admin'])): ?>
-        <div style="text-align: center; margin-bottom: 10px;">
-            <span style="color: #dc2626; font-size: 12px; background: #111; padding: 4px 10px; border-radius: 10px; border: 1px dashed #dc2626;">
-                وضع الإدارة نشط 🔓 | <a href="?logout=1" style="color: #fff; text-decoration: none; font-weight: bold;">تسجيل خروج</a>
-            </span>
-        </div>
-    <?php endif; ?>
-
-    <!-- عرض القناة المثبتة لجميع زوار الموقع في الواجهة الرئيسية -->
-    <?php if ($view_type == 'main_categories' && $pinned_channel): ?>
-        <div class="section-title" style="margin-top: 0; color: #fff;">⭐ القناة المثبتة حالياً</div>
-        <div class="list-vertical" style="margin-bottom: 25px;">
-            <div class="item-card" style="cursor: pointer; border: 1px solid #dc2626;" onclick="openFloatingPlayer('<?php echo addslashes($pinned_channel['name']); ?>', '<?php echo addslashes($pinned_channel['stream_url']); ?>')">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="<?php echo htmlspecialchars(!empty($pinned_channel['image']) ? $pinned_channel['image'] : 'https://img.icons8.com/ios-filled/100/ffffff/tv.png'); ?>" onerror="this.src='https://img.icons8.com/ios-filled/100/ffffff/tv.png'">
-                    <span class="title" style="color: #fff; font-weight: 900;"><?php echo htmlspecialchars($pinned_channel['name']); ?></span>
-                </div>
-                <i class="fas fa-play-circle" style="color: #dc2626; font-size: 22px;"></i>
-            </div>
-        </div>
-    <?php endif; ?>
 </div>
 
 <div class="section-title"><?php echo htmlspecialchars($page_title); ?></div>
@@ -338,18 +253,10 @@ $items = $api_data['items'] ?? [];
                 $stream_url = $item['stream_url'] ?? '';
                 $clean_name = addslashes($item['name']);
                 $clean_url = addslashes($stream_url);
-                $clean_img = addslashes($item['image'] ?? '');
             ?>
-                <div class="item-card" style="cursor: pointer; position: relative;" onclick="openFloatingPlayer('<?php echo $clean_name; ?>', '<?php echo $clean_url; ?>')">
+                <div class="item-card" style="cursor: pointer;" onclick="openFloatingPlayer('<?php echo $clean_name; ?>', '<?php echo $clean_url; ?>')">
                     <img src="<?php echo htmlspecialchars($item['image']); ?>" onerror="this.src='https://img.icons8.com/ios-filled/100/ffffff/tv.png'">
                     <span class="title"><?php echo htmlspecialchars($item['name']); ?></span>
-                    
-                    <!-- زر التثبيت البصري الذكي يظهر للأدمن فقط هنا مباشرة دون أي لود أو بطء -->
-                    <?php if (isset($_SESSION['is_admin'])): ?>
-                        <div class="admin-pin-badge" onclick="event.stopPropagation(); processPin('<?php echo $clean_name; ?>', '<?php echo $clean_img; ?>', '<?php echo $clean_url; ?>')">
-                            تثبيت 📌
-                        </div>
-                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -387,29 +294,6 @@ $items = $api_data['items'] ?? [];
     const btnCopyProxy = document.getElementById('btnCopyProxy');
     const btnCopyDirect = document.getElementById('btnCopyDirect');
     let hlsPlayer = null;
-
-    // سكربت طلب الباسورد السري
-    function triggerAdmin() {
-        let password = prompt("أدخل كلمة المرور السرية:");
-        if (password) {
-            document.getElementById('adminPassInput').value = password;
-            document.getElementById('adminAuthForm').submit();
-        }
-    }
-
-    // سكربت التثبيت السريع والتعديل عند الضغط على زر التثبيت
-    function processPin(defaultName, defaultImg, streamUrl) {
-        let newName = prompt("تعديل اسم القناة المثبتة:", defaultName);
-        if (newName === null) return; 
-        
-        let newImg = prompt("رابط لوجو القناة (اتركه كما هو أو غيره):", defaultImg);
-        if (newImg === null) return;
-
-        document.getElementById('form_p_name').value = newName;
-        document.getElementById('form_p_img').value = newImg;
-        document.getElementById('form_p_url').value = streamUrl;
-        document.getElementById('pinChannelForm').submit();
-    }
 
     function openFloatingPlayer(name, rawStreamUrl) {
         const proxyUrl = currentDomain + '?action=stream&url=' + encodeURIComponent(rawStreamUrl);
