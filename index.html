@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>𝕒𝕓𝕕𝕠 𝕞𝕠𝕦𝕤𝕒 | البث المباشر</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #000000;
+            --bg-panel: #0d0d0d;
+            --text-light: #ffffff;
+            --text-gray: #888888;
+            --border-color: #1a1a1a;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Cairo', sans-serif;
+            overflow-x: hidden;
+        }
+        .main-header {
+            display: flex; flex-direction: column; align-items: center; padding: 20px 15px;
+            background-color: #000; border-bottom: 2px solid #111; position: sticky; top: 0; z-index: 100; gap: 15px;
+        }
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center; width: 100%;
+        }
+        .back-btn {
+            color: var(--text-light); text-decoration: none; font-size: 16px;
+            display: flex; align-items: center; gap: 8px; font-weight: bold;
+            background: none; border: none; cursor: pointer; font-family: 'Cairo';
+        }
+        .logo {
+            font-family: 'Cairo'; font-size: 24px; font-weight: 900;
+            background: linear-gradient(135deg, #fff, #dc2626);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .nav-buttons { display: flex; gap: 12px; justify-content: center; width: 100%; }
+        .nav-btn {
+            background: rgba(255,255,255,0.08); color: #fff; padding: 8px 18px; border-radius: 20px;
+            text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 6px;
+        }
+        .nav-btn:hover { background: #dc2626; border-color: transparent; }
+        .section-title { text-align: center; margin: 15px 0; font-size: 16px; font-weight: bold; color: var(--text-gray); }
+        .container { padding: 0 15px 40px 15px; max-width: 600px; margin: 0 auto; }
+        .list-vertical { display: flex; flex-direction: column; gap: 12px; }
+        .list-vertical .item-card {
+            background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px;
+            display: flex; align-items: center; justify-content: space-between; padding: 12px 20px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .list-vertical .item-card:hover { border-color: var(--text-light); }
+        .list-vertical .item-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .grid-three-columns {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .grid-three-columns .item-card {
+            background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            padding: 15px 5px; cursor: pointer; transition: 0.2s;
+        }
+        .grid-three-columns .item-card:hover { border-color: var(--text-light); transform: translateY(-2px); }
+        .grid-three-columns .item-card img { width: 100%; aspect-ratio: 1/1; max-width: 65px; object-fit: contain; margin-bottom: 8px; }
+        .grid-three-columns .item-card .title { font-size: 12px; font-weight: 600; }
+        .player-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center;
+            padding: 12px; box-sizing: border-box;
+        }
+        .player-content {
+            background: var(--bg-panel); border: 1px solid #222; width: 100%; max-width: 600px; border-radius: 14px; overflow: hidden;
+        }
+        .player-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .close-btn { cursor: pointer; font-size: 20px; }
+        .video-container { width: 100%; background: #000; aspect-ratio: 16/9; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        .server-box { padding: 15px; }
+        .btn-play-now {
+            background: #fff; color: #000; border: none; padding: 12px; width: 100%; border-radius: 6px;
+            font-weight: bold; cursor: pointer; margin-bottom: 10px; font-family: 'Orbitron';
+        }
+        .split-btns { display: flex; gap: 10px; }
+        .split-btns button {
+            flex: 1; border: 1px solid #333; background: #111; color: #fff; padding: 10px;
+            border-radius: 6px; cursor: pointer; font-family: 'Orbitron';
+        }
+        .loading-spinner { text-align: center; padding: 40px; color: var(--text-gray); }
+        .error-message { text-align: center; padding: 30px; color: #ff8888; }
+        @media (max-width: 480px) { .grid-three-columns { gap: 8px; } }
+    </style>
+</head>
+<body>
+<div class="main-header">
+    <div class="header-top">
+        <button id="backButton" class="back-btn"><i class="fas fa-arrow-right"></i> رجوع</button>
+        <div class="logo">𝕒𝕓𝕕𝕠 𝕞𝕠𝕦𝕤𝕒</div>
+        <div style="width: 50px;"></div>
+    </div>
+    <div class="nav-buttons">
+        <a href="http://ab.gt.tc" target="_blank" class="nav-btn"><i class="fas fa-film"></i> الأفلام</a>
+        <a href="http://eng.gt.tc" target="_blank" class="nav-btn"><i class="fas fa-video"></i> المسلسلات</a>
+    </div>
+</div>
+<div id="sectionTitle" class="section-title">جاري التحميل...</div>
+<div id="appContainer" class="container"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div>
+
+<div class="player-modal" id="playerModal">
+    <div class="player-content">
+        <div class="player-header">
+            <h3 id="modalChannelName">القناة</h3>
+            <i class="fas fa-xmark close-btn" onclick="closeFloatingPlayer()"></i>
+        </div>
+        <div class="video-container"><video id="floatingVideo" controls autoplay playsinline></video></div>
+        <div class="server-box">
+            <div class="server-title">سيرفر البث المباشر</div>
+            <button class="btn-play-now" id="btnPlayNow">▶ PLAY NOW</button>
+            <div class="split-btns">
+                <button id="btnCopyProxy">🔗 PROXY LINK</button>
+                <button id="btnCopyDirect">📋 DIRECT LINK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------------------- التكوينات --------------------
+    const BASE_API_URL = "https://blanchedalmond-dugong-106131.hostingersite.com/channels.php";
+    const CORS_PROXY = "https://corsproxy.io/?url=";   // وسيط عام لـ CORS
+    
+    let currentView = "main_categories";
+    let currentCat = null, currentSub = null;
+    let hlsPlayer = null;
+    let currentRawUrl = "";
+    
+    const appContainer = document.getElementById('appContainer');
+    const sectionTitleElem = document.getElementById('sectionTitle');
+    const backBtn = document.getElementById('backButton');
+    const playerModal = document.getElementById('playerModal');
+    const modalChannelName = document.getElementById('modalChannelName');
+    const videoTag = document.getElementById('floatingVideo');
+    const btnPlayNow = document.getElementById('btnPlayNow');
+    const btnCopyProxy = document.getElementById('btnCopyProxy');
+    const btnCopyDirect = document.getElementById('btnCopyDirect');
+    
+    // --- جلب البيانات عبر CORS Proxy ---
+    async function fetchOstoraData(url) {
+        const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
+        const response = await fetch(proxiedUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    }
+    
+    // --- إعادة كتابة ملف M3U8 (توجيه كل المقاطع عبر البروكسي) ---
+    async function rewriteM3u8(originalM3u8Url) {
+        const proxiedManifestUrl = CORS_PROXY + encodeURIComponent(originalM3u8Url);
+        const manifestResp = await fetch(proxiedManifestUrl);
+        let content = await manifestResp.text();
+        const lines = content.split('\n');
+        const baseUrl = originalM3u8Url.substring(0, originalM3u8Url.lastIndexOf('/') + 1);
+        const newLines = lines.map(line => {
+            line = line.trim();
+            if (line === '' || line.startsWith('#')) return line;
+            // إذا كان الرابط مطلقاً
+            let absoluteUrl;
+            if (line.startsWith('http://') || line.startsWith('https://')) {
+                absoluteUrl = line;
+            } else {
+                absoluteUrl = baseUrl + line;
+            }
+            // توجيه عبر البروكسي
+            return CORS_PROXY + encodeURIComponent(absoluteUrl);
+        });
+        return newLines.join('\n');
+    }
+    
+    // --- تشغيل البث (يدعم M3U8 مع إعادة الكتابة) ---
+    async function loadStreamWithProxy(streamUrl) {
+        if (!streamUrl) return;
+        if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+        videoTag.pause();
+        videoTag.removeAttribute('src');
+        
+        const isM3u8 = streamUrl.includes('.m3u8') || streamUrl.includes('mpegurl');
+        if (Hls.isSupported() && isM3u8) {
+            try {
+                const rewrittenM3u8 = await rewriteM3u8(streamUrl);
+                const blob = new Blob([rewrittenM3u8], { type: 'application/vnd.apple.mpegurl' });
+                const blobUrl = URL.createObjectURL(blob);
+                hlsPlayer = new Hls();
+                hlsPlayer.loadSource(blobUrl);
+                hlsPlayer.attachMedia(videoTag);
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => videoTag.play().catch(e=>console.log));
+                hlsPlayer.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) console.error(data); });
+            } catch(e) { console.error("M3U8 rewrite failed", e); fallbackDirect(streamUrl); }
+        } else {
+            fallbackDirect(streamUrl);
+        }
+    }
+    
+    function fallbackDirect(streamUrl) {
+        const proxied = CORS_PROXY + encodeURIComponent(streamUrl);
+        videoTag.src = proxied;
+        videoTag.play().catch(e => console.warn("تشغيل تلقائي غير ممكن"));
+    }
+    
+    // --- مشغل منبثق ---
+    function openFloatingPlayer(name, rawStreamUrl) {
+        if (!rawStreamUrl) { alert("رابط البث غير صالح"); return; }
+        currentRawUrl = rawStreamUrl;
+        modalChannelName.innerText = name;
+        playerModal.style.display = 'flex';
+        
+        btnPlayNow.onclick = () => {
+            loadStreamWithProxy(rawStreamUrl);
+            forceFullscreen();
+        };
+        btnCopyProxy.onclick = () => copyText(CORS_PROXY + encodeURIComponent(rawStreamUrl), this, 'PROXY');
+        btnCopyDirect.onclick = () => copyText(rawStreamUrl, this, 'DIRECT');
+        
+        loadStreamWithProxy(rawStreamUrl);
+        forceFullscreen();
+    }
+    
+    function forceFullscreen() {
+        const v = videoTag;
+        if (v.requestFullscreen) v.requestFullscreen();
+        else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();
+        if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(e=>console.log);
+    }
+    
+    window.closeFloatingPlayer = function() {
+        if (document.fullscreenElement) document.exitFullscreen();
+        if (screen.orientation?.unlock) screen.orientation.unlock();
+        if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+        videoTag.pause();
+        videoTag.src = "";
+        playerModal.style.display = 'none';
+    };
+    
+    function copyText(text, btn, type) {
+        navigator.clipboard.writeText(text);
+        const old = btn.innerText;
+        btn.innerText = '✓ تم النسخ!';
+        setTimeout(() => btn.innerText = (type === 'PROXY' ? 'PROXY LINK' : 'DIRECT LINK'), 1500);
+    }
+    
+    // --- تحديث واجهة الباقات ---
+    async function loadContent() {
+        appContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const cat = params.get('cat'), sub = params.get('sub');
+            let targetUrl = BASE_API_URL;
+            let viewType = "main_categories", pageTitle = "الباقات الرئيسية", items = [];
+            
+            if (sub !== null) {
+                targetUrl += "?cat=" + encodeURIComponent(sub);
+                const data = await fetchOstoraData(targetUrl);
+                pageTitle = data.title || "القنوات المتاحة";
+                items = data.items || [];
+                viewType = "channels";
+                currentView = "channels";
+                currentSub = sub; currentCat = cat;
+            } else if (cat !== null) {
+                targetUrl += "?cat=" + encodeURIComponent(cat);
+                const data = await fetchOstoraData(targetUrl);
+                pageTitle = data.title || "الباقات الفرعية";
+                items = data.items || [];
+                if (items.length && items[0].is_stream === true) viewType = "channels";
+                else viewType = "sub_categories";
+                currentView = viewType;
+                currentCat = cat; currentSub = null;
+            } else {
+                const data = await fetchOstoraData(BASE_API_URL);
+                pageTitle = data.title || "الباقات الرئيسية";
+                items = data.items || [];
+                viewType = "main_categories";
+                currentView = "main_categories";
+            }
+            sectionTitleElem.innerText = pageTitle;
+            renderView(viewType, items);
+        } catch(e) {
+            appContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> فشل التحميل: ${e.message}<br><button onclick="location.reload()" style="margin-top:12px; padding:8px 16px; background:#dc2626; border:none; color:white; border-radius:8px;">إعادة المحاولة</button></div>`;
+        }
+    }
+    
+    function renderView(viewType, items) {
+        if (!items.length) { appContainer.innerHTML = '<div class="error-message">لا توجد عناصر</div>'; return; }
+        if (viewType === "main_categories") {
+            let html = `<div class="list-vertical">`;
+            items.forEach(item => {
+                html += `<div class="item-card" data-cat="${encodeURIComponent(item.id)}">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <img src="${escapeHtml(item.image || 'https://img.icons8.com/ios-filled/50/ffffff/video-playlist.png')}" onerror="this.src='https://img.icons8.com/ios-filled/50/ffffff/video-playlist.png'">
+                                <span class="title">${escapeHtml(item.name)}</span>
+                            </div>
+                            <i class="fas fa-chevron-left"></i>
+                         </div>`;
+            });
+            html += `</div>`;
+            appContainer.innerHTML = html;
+            document.querySelectorAll('[data-cat]').forEach(el => {
+                el.addEventListener('click', () => navigateTo(el.getAttribute('data-cat'), null));
+            });
+        } else if (viewType === "sub_categories") {
+            let html = `<div class="grid-three-columns">`;
+            items.forEach(item => {
+                html += `<div class="item-card" data-sub="${encodeURIComponent(item.id)}">
+                            <img src="${escapeHtml(item.image || 'https://img.icons8.com/ios-filled/100/ffffff/folder-invoices.png')}" onerror="this.src='https://img.icons8.com/ios-filled/100/ffffff/folder-invoices.png'">
+                            <span class="title">${escapeHtml(item.name)}</span>
+                         </div>`;
+            });
+            html += `</div>`;
+            appContainer.innerHTML = html;
+            document.querySelectorAll('[data-sub]').forEach(el => {
+                el.addEventListener('click', () => navigateTo(currentCat, el.getAttribute('data-sub')));
+            });
+        } else if (viewType === "channels") {
+            let html = `<div class="grid-three-columns">`;
+            items.forEach(item => {
+                const stream = item.stream_url || '';
+                html += `<div class="item-card" data-name="${escapeHtml(item.name)}" data-stream="${escapeAttr(stream)}">
+                            <img src="${escapeHtml(item.image || 'https://img.icons8.com/ios-filled/100/ffffff/tv.png')}" onerror="this.src='https://img.icons8.com/ios-filled/100/ffffff/tv.png'">
+                            <span class="title">${escapeHtml(item.name)}</span>
+                         </div>`;
+            });
+            html += `</div>`;
+            appContainer.innerHTML = html;
+            document.querySelectorAll('[data-stream]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const name = el.getAttribute('data-name');
+                    const url = el.getAttribute('data-stream');
+                    if (url) openFloatingPlayer(name, url);
+                    else alert("لا يوجد رابط بث لهذه القناة");
+                });
+            });
+        }
+    }
+    
+    function navigateTo(cat, sub) {
+        let newUrl = window.location.pathname;
+        const params = new URLSearchParams();
+        if (cat) params.set('cat', cat);
+        if (sub) params.set('sub', sub);
+        const qs = params.toString();
+        if (qs) newUrl += '?' + qs;
+        window.history.pushState({}, '', newUrl);
+        loadContent();
+    }
+    
+    function handleBack() {
+        if (window.location.search) window.history.back();
+        else if (currentView !== 'main_categories') {
+            window.history.pushState({}, '', window.location.pathname);
+            loadContent();
+        }
+    }
+    window.addEventListener('popstate', () => loadContent());
+    backBtn.addEventListener('click', handleBack);
+    playerModal.addEventListener('click', (e) => { if (e.target === playerModal) closeFloatingPlayer(); });
+    
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+    function escapeAttr(str) { if(!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    
+    loadContent();
+</script>
+</body>
+</html>
